@@ -72,10 +72,10 @@ def chat_body(content, key):
         ins = False
         return 0
     answer = after(response)
+    temp_message = eval(temp_message_chat)
     if temp_message.__len__() > 10:# 限制消息记录数量
-        temp_message = temp_message[-10:] # 保留最近10条消息
+        temp_message = temp_message[-10:] # 保留最近5条消息
     if game == False:
-        temp_message = eval(temp_message_chat)
         temp_message.append({"role": "user", "content": content})
         temp_message.append({"role": "assistant", "content": ans})
         with open("./temp/temp_message.txt", "w", encoding="utf-8") as file:
