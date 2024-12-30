@@ -39,7 +39,7 @@ def chatlearning(api_key, model_name, user_message, system_message, temp_message
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
     # ins=[{"role": "system", "content": system_message}]
     temp_message = eval(temp_message)
-    with open("./temp/model_data1.txt", "r", encoding="utf-8") as f:
+    with open("./data/model_data1.txt", "r", encoding="utf-8") as f:
         model2 = f.read()
     model2 = [
         {
@@ -48,7 +48,7 @@ def chatlearning(api_key, model_name, user_message, system_message, temp_message
         },
         {"role": "assistant", "content": "好的"},
     ]
-    with open("./temp/model_data2.txt", "r", encoding="utf-8") as f:
+    with open("./data/model_data2.txt", "r", encoding="utf-8") as f:
         model3 = f.read()
     model3 = [
         {

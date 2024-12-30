@@ -43,13 +43,13 @@ def tryagain(text):  # 给消息加密，躲避屏蔽词
 
 def chat_body(content, key): 
     model_name = "deepseek-chat"
-    with open("./temp/model.txt", "r", encoding="utf-8") as f:
+    with open("./data/model.txt", "r", encoding="utf-8") as f:
         model_chat = f.read()
-    with open("./temp/temp_message.txt", "r", encoding="utf-8") as f:
+    with open("./data/temp_message.txt", "r", encoding="utf-8") as f:
         temp_message_chat = f.read()
-    with open("./temp/model_game.txt", "r", encoding="utf-8") as f:
+    with open("./data/model_game.txt", "r", encoding="utf-8") as f:
         model_game = f.read()
-    with open("./temp/temp_message_game.json", "r", encoding="utf-8") as f:
+    with open("./data/temp_message_game.json", "r", encoding="utf-8") as f:
         temp_message_game = json.load(f)
     # 分情况请求不同的API
     if "/游戏" in content:
@@ -78,13 +78,13 @@ def chat_body(content, key):
     if game == False:
         temp_message.append({"role": "user", "content": content})
         temp_message.append({"role": "assistant", "content": ans})
-        with open("./temp/temp_message.txt", "w", encoding="utf-8") as file:
+        with open("./data/temp_message.txt", "w", encoding="utf-8") as file:
             file.write(str(temp_message))
         text = "\n" + answer + "\n\nPS：以上内容为AI自动生成，仅供参考。"
     else:
         temp_message_game.append({"role": "user", "content": content})
         temp_message_game.append({"role": "assistant", "content": ans})
-        with open("./temp/temp_message_game.json", "w", encoding="utf-8") as file:
+        with open("./data/temp_message_game.json", "w", encoding="utf-8") as file:
             json.dump(temp_message_game, file, ensure_ascii=False, indent=4)
         text = "\n" + answer + "\n\nPS：以上内容为AI自动生成，仅供娱乐，无实际意义。"
     return text

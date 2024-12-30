@@ -9,11 +9,11 @@ def check(value, my_dict):
 
 
 def joingame(author):
-    with open("./temp/scor.txt", "r") as f:
+    with open("./data/scor.txt", "r") as f:
         score = eval(f.read())
     a = eval(str(author))
     openid = a["member_openid"]
-    with open("./temp/userid.txt", "r", encoding="utf-8") as f:
+    with open("./data/userid.txt", "r", encoding="utf-8") as f:
         userid = eval(f.read())
     if openid in str(userid) == False:
         return "请先绑定你的QQ号或用户名。\n\
@@ -25,17 +25,17 @@ def joingame(author):
             return "用户" + a_name + "已加入过了，请勿重复加入！"
         else:
             score[a_id] = {"name": a_name, "exe": 1, "score": 0}
-            with open("./temp/scor.txt", "w") as f:
+            with open("./data/scor.txt", "w") as f:
                 f.write(str(score))
             return "用户" + a_name + "加入游戏成功~"
 
 
 def startgame(author):
-    with open("./temp/scor.txt", "r") as f:
+    with open("./data/scor.txt", "r") as f:
         score = eval(f.read())
     a = eval(str(author))
     openid = a["member_openid"]
-    with open("./temp/userid.txt", "r", encoding="utf-8") as f:
+    with open("./data/userid.txt", "r", encoding="utf-8") as f:
         userid = eval(f.read())
     a_name = userid[openid]
     a_id = openid
@@ -55,6 +55,6 @@ def startgame(author):
         loser = str(loser).replace("[", "").replace("]", "")
         a = "获胜者：" + winner + "，\n输家：" + loser + "\n请输家接受获胜者的惩罚~"
         score = {}
-        with open("./temp/scor.txt", "w") as f:
+        with open("./data/scor.txt", "w") as f:
             f.write("{}")
         return a

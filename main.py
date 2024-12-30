@@ -28,7 +28,7 @@ class MyClient(botpy.Client):
 
     async def on_ready(self):  # 初次启动时
         global version
-        with open("./temp/version.txt", "r", encoding="utf-8") as file:
+        with open("./data/version.txt", "r", encoding="utf-8") as file:
             version=file.read()
         start_txt = "\
 -----------启动成功------------\n\
@@ -70,7 +70,7 @@ class MyClient(botpy.Client):
         openid = message.author.user_openid
         if "新增提示词" in message.content:  # 新增AI大模型的提示词
             word = message.content.split("新增提示词")[1]
-            with open("./temp/model.txt", "a", encoding="utf-8") as file:
+            with open("./data/model.txt", "a", encoding="utf-8") as file:
                 file.write("\n" + word)
             await message._api.post_c2c_message(
                 openid=message.author.user_openid,
@@ -84,9 +84,9 @@ class MyClient(botpy.Client):
             '''
         elif "删除提示词" in message.content:  # 删除AI大模型的提示词
             word = message.content.split("删除提示词")[1]
-            with open("./temp/model.txt", "r", encoding="utf-8") as file:
+            with open("./data/model.txt", "r", encoding="utf-8") as file:
                 lines = file.readlines()
-            with open("./temp/model.txt", "w", encoding="utf-8") as file:
+            with open("./data/model.txt", "w", encoding="utf-8") as file:
                 for line in lines:
                     if line.strip("\n")!= word:
                         file.write(line)
@@ -132,20 +132,20 @@ class MyClient(botpy.Client):
             data = balance(key=key)
             result = "剩余的余额为：" + data + "元人民币。"
         elif "读取" in message.content:
-            with open("./temp/tryagain.txt", "r", encoding="utf-8") as f:
+            with open("./data/tryagain.txt", "r", encoding="utf-8") as f:
                 result = f.read()
         elif "查地方 " in message.content:
             result = arcode(message.content)
         elif "查区号 " in message.content:
             result = arname(message.content)
         elif "清空上下文" in message.content:
-            with open("./temp/temp_message.txt", "w", encoding="utf-8") as file:
+            with open("./data/temp_message.txt", "w", encoding="utf-8") as file:
                 file.write("[]")
-            with open("./temp/temp_message_game.json", "w", encoding="utf-8") as file:
+            with open("./data/temp_message_game.json", "w", encoding="utf-8") as file:
                 json.dump([], file)
             result = "已经清空了缓存的所有上下文数据！"
         elif "功能" in message.content:
-            with open("./temp/aboutme.txt", "r", encoding="utf-8") as file:
+            with open("./data/aboutme.txt", "r", encoding="utf-8") as file:
                 result = file.read()
         else:
             data = False
@@ -170,7 +170,7 @@ class MyClient(botpy.Client):
             except:
                 a = tryagain(result)
                 print(a)
-                with open("./temp/tryagain.txt", "w", encoding="utf-8") as file:
+                with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
                     file.write(a)
                 await message._api.post_group_message(
                     group_openid=message.group_openid,
