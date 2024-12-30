@@ -41,12 +41,8 @@ def tryagain(text):  # 给消息加密，躲避屏蔽词
     return result
 
 
-def chat_body(content, key):
-    # api_key = "sk-5cd23846d4304f63b93db419bf87641e"
-    # api_key = "sk-846438feee1e41a08d644e86d1bc02c7"
-    api_key = key  # 临时
+def chat_body(content, key): 
     model_name = "deepseek-chat"
-    user_message = content
     with open("./temp/model.txt", "r", encoding="utf-8") as f:
         model_chat = f.read()
     with open("./temp/temp_message.txt", "r", encoding="utf-8") as f:
@@ -57,18 +53,18 @@ def chat_body(content, key):
         temp_message_game = json.load(f)
     # 分情况请求不同的API
     if "/游戏" in content:
-        user_message = user_message.split("/游戏")[1]
+        content = content.replace("/游戏", "")
         ans = chatgame(
-            api_key, model_name, user_message, model_game, temp_message_game
+            key, model_name, content, model_game, temp_message_game
         )
         response = "【游戏模式】\n" + ans
         game = True
     elif "维权" in content:
-        ans = chatlearning(api_key, model_name, user_message, model_chat, temp_message_chat)
+        ans = chatlearning(key, model_name, content, model_chat, temp_message_chat)
         response = ans
         game = False
     else:
-        ans = chatsimple(api_key, model_name, user_message, model_chat, temp_message_chat)
+        ans = chatsimple(key, model_name, content, model_chat, temp_message_chat)
         response = ans
         game = False
     print(response)
@@ -76,15 +72,17 @@ def chat_body(content, key):
         ins = False
         return 0
     answer = after(response)
+    if temp_message.__len__() > 10:# 限制消息记录数量
+        temp_message = temp_message[-10:] # 保留最近10条消息
     if game == False:
         temp_message = eval(temp_message_chat)
-        temp_message.append({"role": "user", "content": user_message})
+        temp_message.append({"role": "user", "content": content})
         temp_message.append({"role": "assistant", "content": ans})
         with open("./temp/temp_message.txt", "w", encoding="utf-8") as file:
             file.write(str(temp_message))
         text = "\n" + answer + "\n\nPS：以上内容为AI自动生成，仅供参考。"
     else:
-        temp_message_game.append({"role": "user", "content": user_message})
+        temp_message_game.append({"role": "user", "content": content})
         temp_message_game.append({"role": "assistant", "content": ans})
         with open("./temp/temp_message_game.json", "w", encoding="utf-8") as file:
             json.dump(temp_message_game, file, ensure_ascii=False, indent=4)
@@ -94,7 +92,7 @@ def chat_body(content, key):
 
 def after(text):
     # 对回答进行修改，以免被拦截
-    answer = text.strip("**")
+    answer = text
     if ".com" in answer:
         answer = answer.replace(".", "点")
     if ".cn" in answer:
@@ -110,5 +108,4 @@ def after(text):
     answer = answer.replace("中央军事委员会主席","Chairman of the Central Military Commission")
     answer = answer.replace("中央委员会","Central Committee")
     answer = answer.replace("市委书记","CPC市丿委员会，书丿记")
-    answer = answer.replace("**", " ").replace("#", " ")
     return answer
