@@ -1,1 +1,4 @@
 logdata/
+**/__pycache__/*
+*.log
+*.pyc
