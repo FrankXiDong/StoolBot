@@ -36,7 +36,7 @@ def check(value, my_dict):
 
 def tryagain(text):  # 给消息加密，躲避屏蔽词
     result = "".join(
-        [char + "丿" if i < len(text) - 1 else char for i, char in enumerate(text)]
+        [char + "丨" if i < len(text) - 1 else char for i, char in enumerate(text)]
     )
     return result
 
