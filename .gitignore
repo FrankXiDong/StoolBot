@@ -2,3 +2,6 @@ logdata/
 **/__pycache__/*
 *.log
 *.pyc
+botpy.log
+temp_message.txt
+temp_message_game.json
