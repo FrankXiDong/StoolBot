@@ -41,8 +41,8 @@ def tryagain(text):  # 给消息加密，躲避屏蔽词
     return result
 
 
-def chat_body(content, key): 
-    model_name = "deepseek-chat"
+def chat_body(content, key, model): 
+    model_name = model
     with open("./data/model.txt", "r", encoding="utf-8") as f:
         model_chat = f.read()
     with open("./data/temp_message.txt", "r", encoding="utf-8") as f:

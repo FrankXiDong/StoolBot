@@ -35,11 +35,14 @@ class MyClient(botpy.Client):
     小板凳频道管家，启动！\n\
     版本:"+version
         print(start_txt)
-        await self.api.post_group_message(
-                group_openid="7C54D45EDDE030719971497006C0CA03",
-                msg_type=0,
-                content="机器人已启动",
-            )
+        try:
+            await self.api.post_group_message(
+                    group_openid="7C54D45EDDE030719971497006C0CA03",
+                    msg_type=0,
+                    content="机器人已启动",
+                )
+        except:
+            pass
         #asyncio.create_task(self.send_periodic_message())
 
     async def send_periodic_message(self):
@@ -128,7 +131,8 @@ class MyClient(botpy.Client):
         elif "开始真心话" in message.content:  # 开始游戏
             result = startgame(message.author)
         elif "查询余额" in message.content:
-            key = json_data["ai"]["chat 02"]["key"]
+            chose = json_data["ai_chose"]
+            key = json_data["ai"][chose]["key"]
             data = balance(key=key)
             result = "剩余的余额为：" + data + "元人民币。"
         elif "读取" in message.content:
@@ -154,9 +158,11 @@ class MyClient(botpy.Client):
                     result = r
                     data = True
             if data == False:
-                key = json_data["ai"]["chat 02"]["key"]
+                chose = json_data['ai_chose']
+                key = json_data["ai"][chose]["key"]
+                model = json_data["ai"][chose]["model"]
                 result = chat_body(
-                    message.content, key=key
+                    message.content, key=key, model=model
                 )  # 调用chat_body函数处理消息
         if result != False:
             try:
