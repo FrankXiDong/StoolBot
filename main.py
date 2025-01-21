@@ -42,6 +42,7 @@ class MyClient(botpy.Client):
                     content="机器人已启动",
                 )
         except:
+            logger.info("机器人已启动，主动消息发送失败")
             pass
         #asyncio.create_task(self.send_periodic_message())
 
@@ -161,8 +162,9 @@ class MyClient(botpy.Client):
                 chose = json_data['ai_chose']
                 key = json_data["ai"][chose]["key"]
                 model = json_data["ai"][chose]["model"]
+                base_url = json_data["ai"][chose]["base_url"]
                 result = chat_body(
-                    message.content, key=key, model=model
+                    message.content, key=key, model=model, base_url=base_url
                 )  # 调用chat_body函数处理消息
         if result != False:
             try:

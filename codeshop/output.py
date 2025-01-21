@@ -1,7 +1,7 @@
 from time import sleep
-import json
+import json, random
 from codeshop.areacode import mareacode, mareaname
-from codeshop.DeepSeek import chatlearning, chatsimple, chatgame
+from codeshop.DeepSeek import chatlearning, chatsimple, chatgame, game_answer
 
 
 def arcode(areanum):
@@ -41,7 +41,7 @@ def tryagain(text):  # 给消息加密，躲避屏蔽词
     return result
 
 
-def chat_body(content, key, model): 
+def chat_body(content, key, model, base_url): 
     model_name = model
     with open("./data/model.txt", "r", encoding="utf-8") as f:
         model_chat = f.read()
@@ -55,16 +55,30 @@ def chat_body(content, key, model):
     if "/游戏" in content:
         content = content.replace("/游戏", "")
         ans = chatgame(
-            key, model_name, content, model_game, temp_message_game
+            key, model_name, content, model_game, temp_message_game, base_url
         )
         response = "【游戏模式】\n" + ans
         game = True
+    elif "/回复模拟" in content:
+        access = random.random() < 0.4
+        if access == True:
+            with open("./data/model_g_a_a.txt", "r", encoding="utf-8") as f:
+                model_g_a = f.read()
+        else:
+            with open("./data/model_g_a.txt", "r", encoding="utf-8") as f:
+                model_g_a = f.read()
+        content = content.replace("/回复模拟", "")
+        ans = game_answer(
+            key, model_name, content, model_g_a, temp_message_chat, base_url
+        )
+        response = f"【模拟教育局回复游戏（是否成功：{access}）】\n{ans}"
+        game = 0
     elif "维权" in content:
-        ans = chatlearning(key, model_name, content, model_chat, temp_message_chat)
+        ans = chatlearning(key, model_name, content, model_chat, temp_message_chat, base_url)
         response = ans
         game = False
     else:
-        ans = chatsimple(key, model_name, content, model_chat, temp_message_chat)
+        ans = chatsimple(key, model_name, content, model_chat, temp_message_chat, base_url)
         response = ans
         game = False
     print(response)
@@ -81,6 +95,8 @@ def chat_body(content, key, model):
         with open("./data/temp_message.txt", "w", encoding="utf-8") as file:
             file.write(str(temp_message))
         text = "\n" + answer + "\n\nPS：以上内容为AI自动生成，仅供参考。"
+    elif game == 0:
+        text = "\n" + answer + "\n\nPS：以上内容为AI自动生成，仅供娱乐，无实际意义。"
     else:
         temp_message_game.append({"role": "user", "content": content})
         temp_message_game.append({"role": "assistant", "content": ans})
