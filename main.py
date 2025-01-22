@@ -87,6 +87,10 @@ class MyClient(botpy.Client):
                 f"新增了一个提示词。\n发送指令的ID：{openid}\n提示词内容：{word}"
             )
             return
+        if "读取" in message.content:
+            with open("./data/tryagain.txt", "r", encoding="utf-8") as f:
+                result = f.read()
+            return
         if "审核" in message.content:
             await message._api.post_c2c_message(
                 openid=message.author.user_openid,
@@ -116,12 +120,35 @@ class MyClient(botpy.Client):
                     file.write(text)
             else:
                 return
-            await message._api.post_c2c_message(
-                openid=message.author.user_openid,
-                msg_type=0,
-                msg_id=message.id,
-                content=f"已修改提示词为：\n{text}\n\n原提示词为：\n{old}",
-            )
+            result = f"已修改提示词为：\n{text}\n\n原提示词为：\n{old}"
+            try:
+                await message._api.post_c2c_message(
+                    openid=message.author.user_openid,
+                    msg_type=0,
+                    msg_id=message.id,
+                    content=result,
+                )
+            except:
+                a = tryagain(result)
+                try:
+                    sleep(3)
+                    await self.api.post_group_message(
+                        group_openid=message.group_openid,
+                        msg_type=0,
+                        msg_id=message.id,
+                        content=a,
+                    )
+                except:
+                    print(a)
+                    with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
+                        file.write(a)
+                    await message._api.post_group_message(
+                        group_openid=message.group_openid,
+                        msg_type=0,
+                        msg_id=message.id,
+                        content=f"请尝试发送“读取”获取加密版回答",
+                    )
+
             logger.info(
                 f"修改了g_a_a提示词。\n发送指令的ID：{openid}\n提示词内容：{text}"
             )
