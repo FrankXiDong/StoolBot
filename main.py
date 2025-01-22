@@ -15,6 +15,7 @@ from codeshop.output import arcode, arname, tryagain, chat_body
 from botpy.audio import Audio
 import asyncio
 
+logging.configure_logging()
 _log = logging.get_logger()
 keyanswer = {
     "test": "你在测试什么？",
@@ -74,7 +75,7 @@ class MyClient(botpy.Client):
         openid = message.author.user_openid
         if "新增提示词" in message.content:  # 新增AI大模型的提示词
             word = message.content.split("新增提示词")[1]
-            with open("./data/model.txt", "a", encoding="utf-8") as file:
+            with open("./prompt/model.txt", "a", encoding="utf-8") as file:
                 file.write("\n" + word)
             await message._api.post_c2c_message(
                 openid=message.author.user_openid,
@@ -83,33 +84,46 @@ class MyClient(botpy.Client):
                 content=f"我收到了你的提示词：{word}。",
             )
             logger.info(
-                "新增了一个提示词。\n发送指令的ID：{open_id}\n提示词内容：{word}"
+                f"新增了一个提示词。\n发送指令的ID：{openid}\n提示词内容：{word}"
             )
-            '''
-        elif "删除提示词" in message.content:  # 删除AI大模型的提示词
-            word = message.content.split("删除提示词")[1]
-            with open("./data/model.txt", "r", encoding="utf-8") as file:
-                lines = file.readlines()
-            with open("./data/model.txt", "w", encoding="utf-8") as file:
-                for line in lines:
-                    if line.strip("\n")!= word:
-                        file.write(line)
-            await message._api.post_c2c_message(
-                openid=message.author.user_openid,
-                msg_type=0,
-                msg_id=message.id,
-                content=f"我删除了你的提示词：{word}。",
-            )
-            logger.info(
-                "删除了一个提示词。\n发送指令的ID："+openid+"\n提示词内容："+word
-            )
-            '''
-        elif "审核" in message.content:
+            return
+        if "审核" in message.content:
             await message._api.post_c2c_message(
                 openid=message.author.user_openid,
                 msg_type=0,
                 msg_id=message.id,
                 content=f"功能尚未开发！",
+            )
+            return
+        if "/修改" in message.content:
+            if "/修改aa" in message.content:
+                text = message.content.replace("/修改aa","")
+                with open("./prompt/model_g_a_a.txt", "r", encoding="utf-8") as file:
+                    old = file.read()
+                with open("./prompt/model_g_a_a.txt", "w", encoding="utf-8") as file:
+                    file.write(text)
+            elif "/修改a" in message.content:
+                text = message.content.replace("/修改a","")
+                with open("./prompt/model_g_a.txt", "r", encoding="utf-8") as file:
+                    old = file.read()
+                with open("./prompt/model_g_a.txt", "w", encoding="utf-8") as file:
+                    file.write(text)
+            elif "/修改g" in message.content:
+                text = message.content.replace("/修改g","")
+                with open("./prompt/model_game.txt", "r", encoding="utf-8") as file:
+                    old = file.read()
+                with open("./prompt/model_game.txt", "w", encoding="utf-8") as file:
+                    file.write(text)
+            else:
+                return
+            await message._api.post_c2c_message(
+                openid=message.author.user_openid,
+                msg_type=0,
+                msg_id=message.id,
+                content=f"已修改提示词为：\n{text}\n\n原提示词为：\n{old}",
+            )
+            logger.info(
+                f"修改了g_a_a提示词。\n发送指令的ID：{openid}\n提示词内容：{text}"
             )
         else:
             return
@@ -177,21 +191,24 @@ class MyClient(botpy.Client):
                 result = True
             except:
                 a = tryagain(result)
-                print(a)
-                with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
-                    file.write(a)
-                await message._api.post_group_message(
-                    group_openid=message.group_openid,
-                    msg_type=0,
-                    msg_id=message.id,
-                    content=f"请尝试发送“读取”获取加密版回答",
-                )
-                await self.api.post_group_message(
-                    group_openid=message.group_openid,
-                    msg_type=0,
-                    msg_id=message.id,
-                    content=a,
-                )
+                try:
+                    sleep(3)
+                    await self.api.post_group_message(
+                        group_openid=message.group_openid,
+                        msg_type=0,
+                        msg_id=message.id,
+                        content=a,
+                    )
+                except:
+                    print(a)
+                    with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
+                        file.write(a)
+                    await message._api.post_group_message(
+                        group_openid=message.group_openid,
+                        msg_type=0,
+                        msg_id=message.id,
+                        content=f"请尝试发送“读取”获取加密版回答",
+                    )
         else:
             await message._api.post_group_message(
                 group_openid=message.group_openid,

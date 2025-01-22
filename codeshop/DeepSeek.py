@@ -1,6 +1,7 @@
 from openai import OpenAI
 from urllib.parse import urlencode
 from urllib.request import urlopen
+import json
 
 
 def chatsimple(api_key, model_name, user_message, system_message, temp_message, base_url):
@@ -39,7 +40,7 @@ def chatlearning(api_key, model_name, user_message, system_message, temp_message
     client = OpenAI(api_key=api_key, base_url=base_url)
     # ins=[{"role": "system", "content": system_message}]
     temp_message = eval(temp_message)
-    with open("./data/model_data1.txt", "r", encoding="utf-8") as f:
+    with open("./prompt/model_data1.txt", "r", encoding="utf-8") as f:
         model2 = f.read()
     model2 = [
         {
@@ -48,7 +49,7 @@ def chatlearning(api_key, model_name, user_message, system_message, temp_message
         },
         {"role": "assistant", "content": "好的"},
     ]
-    with open("./data/model_data2.txt", "r", encoding="utf-8") as f:
+    with open("./prompt/model_data2.txt", "r", encoding="utf-8") as f:
         model3 = f.read()
     model3 = [
         {
@@ -139,3 +140,31 @@ def game_answer(api_key, model_name, user_message, system_message, temp_message,
     except:
         print(f"机器人程序codeshop.DeepSeek出错了！")
         return "机器人程序codeshop.DeepSeek出错了！"
+    
+def before(text):
+    with open("../config.json", "r", encoding="utf-8") as fp:
+        json_data = json.load(fp)
+        api_key = json_data["ai"]["before"]["key"]
+        base_url = json_data["ai"]["before"]["base_url"]
+        model = json_data["ai"]["before"]["model"]
+        
+    client = OpenAI(api_key=api_key, base_url=base_url)
+    temp_message = []
+    ins = [{"role": "user", "content": text}]
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=ins,
+            stream=False,
+        )
+        # 假设API响应结构符合OpenAI Playground的结构
+        try:
+            print(response.usage)
+            return response.choices[0].message.content
+        except:
+            print(f"机器人程序codeshop.DeepSeek出错了！")
+            return "机器人程序codeshop.DeepSeek出错了！"
+    except:
+        print(f"机器人程序codeshop.DeepSeek出错了！")
+        return "机器人程序codeshop.DeepSeek出错了！"
+    
