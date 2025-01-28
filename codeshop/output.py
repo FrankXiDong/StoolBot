@@ -43,14 +43,16 @@ def tryagain(text):  # 给消息加密，躲避屏蔽词
 
 def chat_body(content, key, model, base_url): 
     model_name = model
-    with open("./prompt/model.txt", "r", encoding="utf-8") as f:
-        model_chat = f.read()
-    with open("./data/temp_message.txt", "r", encoding="utf-8") as f:
-        temp_message_chat = f.read()
+    model_chat = ""
+    temp_message_chat = ""
+    
     # 分情况请求不同的API
     if "/游戏" in content:
-        with open("./data/temp_message_game.json", "r", encoding="utf-8") as f:
-            temp_message_game = json.load(f)
+        try:
+            with open("./data/temp_message_game.json", "r", encoding="utf-8") as f:
+                temp_message_game = json.load(f)
+        except:
+            temp_message_game = []
         with open("./prompt/model_game.txt", "r", encoding="utf-8") as f:
             model_game = f.read()
         check = before('请检查，\
@@ -90,6 +92,13 @@ def chat_body(content, key, model, base_url):
         response = ans
         game = False
     else:
+        try:
+            with open("./prompt/model.txt", "r", encoding="utf-8") as f:
+                model_chat = f.read()
+            with open("./data/temp_message.txt", "r", encoding="utf-8") as f:
+                temp_message_chat = f.read()
+        except:
+            pass
         ans = chatsimple(key, model_name, content, model_chat, temp_message_chat, base_url)
         response = ans
         game = False

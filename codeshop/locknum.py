@@ -10,8 +10,11 @@ def check(value, my_dict):
 
 def locknum(content, openid):
     user = content.split("/绑定 ")[1]  # 截取用户名
-    with open("./data/userid.txt", "r", encoding="utf-8") as f:
-        userid = eval(f.read())
+    try:
+        with open("./data/userid.txt", "r", encoding="utf-8") as f:
+            userid = eval(f.read())
+    except:
+        userid = {}
     if check(openid, userid) == False:  # 当检测到ID为未注册ID时，执行注册操作
         userid[openid] = user
         with open("./data/userid.txt", "w", encoding="utf-8") as f:

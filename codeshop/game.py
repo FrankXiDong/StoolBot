@@ -37,8 +37,11 @@ def check(value, my_dict):
 
 
 def joingame(author):
-    with open("./data/scor.txt", "r") as f:
-        score = eval(f.read())
+    try:
+        with open("./data/scor.txt", "r") as f:
+            score = eval(f.read())
+    except:
+        score = {}
     a = eval(str(author))
     openid = a["member_openid"]
     with open("./data/userid.txt", "r", encoding="utf-8") as f:
