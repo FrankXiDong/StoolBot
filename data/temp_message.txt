@@ -1,1 +1,1 @@
-[{'role': 'user', 'content': ' 你的大模型是？'}, {'role': 'assistant', 'content': '我的大模型是由OpenAI开发的，具体来说是基于GPT-3.5架构的模型。这个模型被设计用来理解和生成自然语言文本，以帮助用户解答问题和提供信息。'}]
+[{'role': 'user', 'content': ' 你的大模型是？'}, {'role': 'assistant', 'content': '我的大模型是由OpenAI开发的，具体来说是基于GPT-3.5架构的模型。这个模型被设计用来理解和生成自然语言文本，以帮助用户解答问题和提供信息。'}, {'role': 'user', 'content': ' 你是哪个省的？'}, {'role': 'assistant', 'content': '妈妈生的！'}, {'role': 'user', 'content': ' 你好'}, {'role': 'assistant', 'content': '你好！有什么我可以帮助你的吗？无论是关于学生维权、投诉学校违规行为，还是其他问题，我都在这里为你提供帮助。'}]

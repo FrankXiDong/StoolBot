@@ -19,7 +19,6 @@ logging.configure_logging()
 _log = logging.get_logger()
 keyanswer = {
     "test": "你在测试什么？",
-    "你是哪个省的": "妈妈生的（误）",
 }
 json_data = {}
 version = ""
