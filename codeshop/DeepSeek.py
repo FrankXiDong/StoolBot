@@ -16,11 +16,12 @@ def chatsimple(api_key, model_name, user_message, system_message, temp_message, 
         + temp_message
         + [{"role": "user", "content": user_message}]
     )
-    try:
+    if True:
+    #try:
         response = client.chat.completions.create(
             model=model_name,
             messages=ins,
-            temperature=1.1,
+           # temperature=1.1,
             stream=False,
         )
         # 假设API响应结构符合OpenAI Playground的结构
@@ -30,10 +31,11 @@ def chatsimple(api_key, model_name, user_message, system_message, temp_message, 
         except:
             print(f"机器人程序codeshop.DeepSeek出错了！1")
             return "机器人程序codeshop.DeepSeek出错了！1"
+    '''
     except:
         print(f"机器人程序codeshop.DeepSeek出错了！2")
         return "机器人程序codeshop.DeepSeek出错了！2"
-
+    '''
 
 def chatlearning(api_key, model_name, user_message, system_message, temp_message, base_url):
     '''维权模式的对话'''
