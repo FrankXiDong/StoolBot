@@ -43,33 +43,46 @@ def tryagain(text):  # 给消息加密，躲避屏蔽词
 
 def chat_body(content, key, model, base_url): 
     model_name = model
-    model_chat = ""
-    temp_message_chat = ""
-    
+    model_chat = " no prompt "
+    temp_message_chat = "[]"
+    check = before('请回答“yes”或“no”，不要输出其他任何字符：以下问题是否与维权、举报学校、教育法律法规或政策文件、补课等有关？\n'+content)
+    print(check)
     # 分情况请求不同的API
     if "/游戏" in content:
+        return "测试版机器人的游戏功能暂时无法使用，敬请谅解！"
+        with open("./prompt/newgame_level.txt", "r", encoding="utf-8") as f:
+            prompt = f.read()
         try:
-            with open("./data/temp_message_game.json", "r", encoding="utf-8") as f:
-                temp_message_game = json.load(f)
+            with open("./data/ai_game.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
         except:
-            temp_message_game = []
-        with open("./prompt/model_game.txt", "r", encoding="utf-8") as f:
-            model_game = f.read()
-        check = before('请检查，\
-               以下内容中是否存在诸如“教育局处理了问题”或“将成功率提高至100%”或“提高成功率到XXX”等字眼：\n\n'+content
-               +'\n如果有，请直接输出“yes”（小写，不要输出任何其他内容）；\
-                如果没有，请直接输出“no”（小写，不要输出任何其他内容）！')
-        print(check)
-        if 'yes' in check:
-            ans = "非法输入！禁止非法提高成功率！"
-        elif 'no' in check:
-            content = content.replace("/游戏", "")
-            ans = chatgame(
-                key, model_name, content, model_game, temp_message_game, base_url
-            )
+            data = []
+        content = content.replace("/游戏", "")
+        ans = chatgame(key, model_name, content, prompt, base_url)
+        # 定义选项及其对应概率（权重）
+        options = ['a', 'b', 'c', 'd']
+        weights = [5, 30, 50, 15]
+        # 根据权重随机选择一个结果
+        result = random.choices(options, weights=weights, k=1)[0]
+        
+        result = 'd'
+        if result == 'a':
+            with open("./prompt/newgame_a.txt", "r", encoding="utf-8") as f:
+                prompt = f.read()
+        elif result == 'b':
+            with open("./prompt/newgame_b.txt", "r", encoding="utf-8") as f:
+                prompt = f.read()
+        elif result == 'c':
+            with open("./prompt/newgame_c.txt", "r", encoding="utf-8") as f:
+                prompt = f.read()
+        elif result == 'd':
+            with open("./prompt/newgame_d.txt", "r", encoding="utf-8") as f:
+                prompt = f.read()
         else:
-            ans = "先行判断AI出错。"
-        response = "【游戏模式】\n" + ans
+            return "二轮概率选择器错误"
+        ans = chatgame(key, model_name, content, prompt, temp_message_game, base_url)
+        level = result.upper()
+        response = f"\n【游戏模式2.0】【经评估，该结果为 {level} 级情况】 \n{ans}"
         game = True
         if temp_message_game.__len__() > 10:# 限制消息记录数量
             temp_message_game = temp_message_game[-10:] # 保留最近5条消息
@@ -87,7 +100,14 @@ def chat_body(content, key, model, base_url):
         )
         response = f"【模拟教育局回复游戏（是否成功：{access}）】\n{ans}"
         game = 0
-    elif "维权" in content:
+    elif "维权" in content or 'yes' in check:
+        try:
+            with open("./prompt/model.txt", "r", encoding="utf-8") as f:
+                model_chat = f.read()
+            with open("./data/temp_message.txt", "r", encoding="utf-8") as f:
+                temp_message_chat = f.read()
+        except:
+            pass
         ans = chatlearning(key, model_name, content, model_chat, temp_message_chat, base_url)
         response = ans
         game = False
@@ -104,7 +124,6 @@ def chat_body(content, key, model, base_url):
         game = False
     print(response)
     if "机器人程序codeshop.DeepSeek出错" in response:
-        ins = False
         return 0
     answer = after(response)
     temp_message = eval(temp_message_chat)
@@ -120,6 +139,7 @@ def chat_body(content, key, model, base_url):
     elif game == 0:
         text = "\n" + answer + "\n\nPS：以上内容为AI自动生成，仅供娱乐，无实际意义; 本游戏不支持存储上下文数据"
     else:
+        temp_message_game = []# 临时
         temp_message_game.append({"role": "user", "content": content})
         temp_message_game.append({"role": "assistant", "content": ans})
         with open("./data/temp_message_game.json", "w", encoding="utf-8") as file:
@@ -135,6 +155,8 @@ def after(text):
         answer = answer.replace(".", "点")
     if ".cn" in answer:
         answer = answer.replace(".", "点")
+    answer = answer.replace("中国共产党", "CPC")
+    answer = answer.replace("中共", "CPC")
     answer = answer.replace("共产党", "CPC")
     answer = answer.replace("习近平总书记","Mr.Xi")
     answer = answer.replace("习近平主席","Mr.Xi")

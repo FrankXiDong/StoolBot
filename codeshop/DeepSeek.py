@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openai import OpenAI, APIError, APIConnectionError
 from urllib.parse import urlencode
 from urllib.request import urlopen
 import json
@@ -67,7 +67,7 @@ def chatlearning(api_key, model_name, user_message, system_message, temp_message
         + temp_message
         + [{"role": "user", "content": user_message}]
     )
-    # print(str(ins))
+    # if True:
     try:
         response = client.chat.completions.create(
             model=model_name,
@@ -77,25 +77,26 @@ def chatlearning(api_key, model_name, user_message, system_message, temp_message
             stream=False,
         )
         # 假设API响应结构符合OpenAI Playground的结构
-        try:
-            print(response.usage)
-            return response.choices[0].message.content
-        except:
-            print(f"机器人程序codeshop.DeepSeek出错了！")
-            return "机器人程序codeshop.DeepSeek出错了！"
-    except:
-        print(f"机器人程序codeshop.DeepSeek出错了！")
-        return "机器人程序codeshop.DeepSeek出错了！"
+        print(response.usage)
+        return response.choices[0].message.content
+    except json.JSONDecodeError as e:
+        print(f"JSON解析失败，原始响应内容: {response.text}")
+        return "服务响应异常，请稍后再试"
+    except APIError as e:
+        print(f"API错误: {e.status_code} {e.message}")
+        return "服务暂时不可用，请稍后再试"
+    except APIConnectionError as e:
+        print(f"连接错误: {e}")
+        return "网络连接异常，请检查网络设置"
+    except Exception as e:
+        print(f"未知错误: {str(e)}")
+        return "服务出现意外错误"
 
 
-def chatgame(api_key, model_name, user_message, system_message, temp_message, base_url):
+def chatgame(api_key, model_name, user_message, system_message, base_url):
     '''游戏模式的对话'''
     client = OpenAI(api_key=api_key, base_url=base_url)
-    ins = (
-        [{"role": "system", "content": system_message}]
-        + temp_message
-        + [{"role": "user", "content": user_message}]
-    )
+    ins = [{"role": "system", "content": system_message},{"role": "user", "content": user_message}]
     try:
         response = client.chat.completions.create(
             model=model_name,
