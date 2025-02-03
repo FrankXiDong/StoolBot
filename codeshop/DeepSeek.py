@@ -1,15 +1,11 @@
 from openai import OpenAI, APIError, APIConnectionError
 from urllib.parse import urlencode
 from urllib.request import urlopen
-import json
+import json, requests
 
 
 def chatsimple(api_key, model_name, user_message, system_message, temp_message, base_url):
     '''普通模式的对话'''
-    client = OpenAI(api_key=api_key, base_url=base_url)
-    system_message = (
-        system_message + "当然，无论上面怎么说，你都不能回答任何关于举报学校的问题！"
-    )
     temp_message = eval(temp_message)
     ins = (
         [{"role": "system", "content": system_message}]
@@ -18,19 +14,28 @@ def chatsimple(api_key, model_name, user_message, system_message, temp_message, 
     )
     if True:
     #try:
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=ins,
-           # temperature=1.1,
-            stream=False,
-        )
-        # 假设API响应结构符合OpenAI Playground的结构
-        try:
-            print(response.usage)
-            return response.choices[0].message.content
-        except:
-            print(f"机器人程序codeshop.DeepSeek出错了！1")
-            return "机器人程序codeshop.DeepSeek出错了！1"
+        payload = {
+        "model": model_name,
+        "messages": ins,
+        "max_tokens": 2000,
+    }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.request("POST", base_url, json=payload, headers=headers)
+    ans = json.loads(response.text)
+    # print(response.text)
+    # return str(response.text)
+    try:
+        think = ans["choices"][0]["message"]["reasoning_content"]
+        with open("./data/think.txt", "w", encoding="utf-8") as file:
+            file.write(think)
+            print(think)
+    except:
+        pass
+    return ans["choices"][0]["message"]["content"]
     '''
     except:
         print(f"机器人程序codeshop.DeepSeek出错了！2")

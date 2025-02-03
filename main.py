@@ -90,6 +90,10 @@ class MyClient(botpy.Client):
             with open("./data/tryagain.txt", "r", encoding="utf-8") as f:
                 result = f.read()
             return
+        if "输出思考" in message.content:
+            with open("./data/think.txt", "r", encoding="utf-8") as f:
+                result = f.read()
+            return
         if "审核" in message.content:
             await message._api.post_c2c_message(
                 openid=message.author.user_openid,
