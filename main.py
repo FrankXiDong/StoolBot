@@ -173,6 +173,9 @@ class MyClient(botpy.Client):
             "加入真心话" in message.content or "参加真心话" in message.content
         ):  # 加入游戏
             result = joingame(message.author)
+        elif "输出思考" in message.content:
+            with open("./data/think.txt", "r", encoding="utf-8") as f:
+                result = f.read()
         elif "开始真心话" in message.content:  # 开始游戏
             result = startgame(message.author)
         elif "查询余额" in message.content:
