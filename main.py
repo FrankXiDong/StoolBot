@@ -181,11 +181,17 @@ class MyClient(botpy.Client):
         elif "查询余额" in message.content:
             chose = json_data["ai_chose"]
             key = json_data["ai"][chose]["key"]
-            data = balance(key=key)
-            result = "剩余的余额为：" + data + "元人民币。"
+            url = json_data["ai"][chose]["base_url"]
+            if url != "https://api.deepseek.com/v1":
+                result = "现在使用的API不支持查询余额！"
+            else:
+                data = balance(key=key)
+                result = "剩余的余额为：" + data + "元人民币。"
         elif "读取" in message.content:
             with open("./data/tryagain.txt", "r", encoding="utf-8") as f:
                 result = f.read()
+            if result == "":
+                result = "没有记录，可能是AI请求失败了"
         elif "查地方 " in message.content:
             result = arcode(message.content)
         elif "查区号 " in message.content:

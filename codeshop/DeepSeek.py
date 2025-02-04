@@ -12,9 +12,7 @@ def chatsimple(api_key, model_name, user_message, system_message, temp_message, 
         + temp_message
         + [{"role": "user", "content": user_message}]
     )
-    if True:
-    #try:
-        payload = {
+    payload = {
         "model": model_name,
         "messages": ins,
         "max_tokens": 2000,
@@ -38,15 +36,9 @@ def chatsimple(api_key, model_name, user_message, system_message, temp_message, 
     with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
         file.write(ans["choices"][0]["message"]["content"])
     return ans["choices"][0]["message"]["content"]
-    '''
-    except:
-        print(f"机器人程序codeshop.DeepSeek出错了！2")
-        return "机器人程序codeshop.DeepSeek出错了！2"
-    '''
 
 def chatlearning(api_key, model_name, user_message, system_message, temp_message, base_url):
     '''维权模式的对话'''
-    client = OpenAI(api_key=api_key, base_url=base_url)
     # ins=[{"role": "system", "content": system_message}]
     temp_message = eval(temp_message)
     with open("./prompt/model_data1.txt", "r", encoding="utf-8") as f:
@@ -74,18 +66,30 @@ def chatlearning(api_key, model_name, user_message, system_message, temp_message
         + temp_message
         + [{"role": "user", "content": user_message}]
     )
-    # if True:
+    payload = {
+        "model": model_name,
+        "messages": ins,
+        "max_tokens": 2000,
+    }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
     try:
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=ins,
-            temperature=0.7,
-            max_tokens=8000,
-            stream=False,
-        )
-        # 假设API响应结构符合OpenAI Playground的结构
-        print(response.usage)
-        return response.choices[0].message.content
+        response = requests.request("POST", base_url, json=payload, headers=headers)
+        ans = json.loads(response.text)
+        # print(response.text)
+        # return str(response.text)
+        try:
+            think = ans["choices"][0]["message"]["reasoning_content"]
+            with open("./data/think.txt", "w", encoding="utf-8") as file:
+                file.write(think)
+                print(think)
+        except:
+            pass
+        with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
+            file.write(ans["choices"][0]["message"]["content"])
+        return ans["choices"][0]["message"]["content"]
     except json.JSONDecodeError as e:
         print(f"JSON解析失败，原始响应内容: {response.text}")
         return "服务响应异常，请稍后再试"
