@@ -35,6 +35,8 @@ def chatsimple(api_key, model_name, user_message, system_message, temp_message, 
             print(think)
     except:
         pass
+    with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
+        file.write(ans["choices"][0]["message"]["content"])
     return ans["choices"][0]["message"]["content"]
     '''
     except:

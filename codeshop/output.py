@@ -145,6 +145,8 @@ def chat_body(content, key, model, base_url):
         with open("./data/temp_message_game.json", "w", encoding="utf-8") as file:
             json.dump(temp_message_game, file, ensure_ascii=False, indent=4)
         text = "\n" + answer + "\n\nPS：以上内容为AI自动生成，仅供娱乐，无实际意义。"
+    with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
+        file.write(text)
     return text
 
 
