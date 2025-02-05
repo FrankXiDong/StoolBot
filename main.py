@@ -169,9 +169,17 @@ class MyClient(botpy.Client):
         result = False
         if "/绑定 " in message.content:  # 绑定用户名和open_id
             result = locknum(message.content, open_id)
-        elif (
-            "加入真心话" in message.content or "参加真心话" in message.content
-        ):  # 加入游戏
+        elif "test03" in message.content:
+            await self.api.post_group_message(
+                group_openid=message.group_openid,
+                msg_type=0,
+                msg_id=message.id,
+                msg_seq=1,
+                message_reference=Reference(message_id=message.id),
+                content="正在测试回复消息",
+            )
+            return
+        elif "加入真心话" in message.content or "参加真心话" in message.content:  # 加入游戏
             result = joingame(message.author)
         elif "输出思考" in message.content:
             with open("./data/think.txt", "r", encoding="utf-8") as f:
@@ -220,41 +228,37 @@ class MyClient(botpy.Client):
                     message.content, key=key, model=model, base_url=base_url
                 )  # 调用chat_body函数处理消息
         if result != False:
-            try:
-                await message._api.post_group_message(
-                    group_openid=message.group_openid,
-                    msg_type=0,
-                    msg_id=message.id,
-                    content=f"{result}",
-                )
-                result = True
-            except:
-                a = tryagain(result)
+            for i in range(2,5):
                 try:
-                    sleep(3)
-                    await self.api.post_group_message(
-                        group_openid=message.group_openid,
-                        msg_type=0,
-                        msg_id=message.id,
-                        content=a,
-                    )
-                except:
-                    print(a)
-                    with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
-                        file.write(a)
                     await message._api.post_group_message(
                         group_openid=message.group_openid,
                         msg_type=0,
                         msg_id=message.id,
-                        content=f"请尝试发送“读取”获取加密版回答",
+                        msg_seq=i,
+                        content=f"{result}",
                     )
+                    result = True
+                    return
+                except:
+                    result = tryagain(result)
+                with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
+                    file.write(result)
+                time.sleep(0.2)
+            await message._api.post_group_message(
+                group_openid=message.group_openid,
+                msg_type=0,
+                msg_id=message.id,
+                content=f"已经尝试多次发送均失败，可以尝试发送“读取”再次重试。",
+            )
+            logger.info(f"消息发送失败多次：\n{result}")
         else:
             await message._api.post_group_message(
                 group_openid=message.group_openid,
                 msg_type=0,
                 msg_id=message.id,
-                content=f"机器人的程序貌似出错了，请联系开发者处理！",
+                content=f"【异常】机器人的程序貌似出错了，返回了一个空值，请联系开发者处理！",
             )
+            logger.error("main.py报错，result返回空值")
         return result
 
 
