@@ -12,6 +12,7 @@ from codeshop.locknum import locknum
 from codeshop.game import joingame, startgame
 from codeshop.balance import balance
 from codeshop.output import arcode, arname, tryagain, chat_body
+from codeshop.AIchat import chatsimple, chatlearning
 from botpy.audio import Audio
 import asyncio
 
@@ -213,6 +214,42 @@ class MyClient(botpy.Client):
         elif "功能" in message.content:
             with open("./data/aboutme.txt", "r", encoding="utf-8") as file:
                 result = file.read()
+        elif "test" in message.content:
+            content = message.content.replace("test", "")
+            reply = ""
+            chose = json_data['ai_chose']
+            key = json_data["ai"][chose]["key"]
+            model_name = json_data["ai"][chose]["model"]
+            base_url = json_data["ai"][chose]["base_url"]
+            try:
+                with open("./prompt/model.txt", "r", encoding="utf-8") as f:
+                    model_chat = f.read()
+                with open("./data/temp_message.txt", "r", encoding="utf-8") as f:
+                    temp_message_chat = f.read()
+            except:
+                model_chat = "no prompt"
+                temp_message_chat = []
+            i = 1
+            for chunk in chatsimple(key, model_name, content, model_chat, temp_message_chat, base_url):
+                try:
+                    await message._api.post_group_message(
+                        group_openid=message.group_openid,
+                        msg_type=0,
+                        msg_id=message.id,
+                        msg_seq=i,
+                        content=chunk,
+                    )
+                    reply+=chunk
+                    i+=1
+                except:
+                    await message._api.post_group_message(
+                        group_openid=message.group_openid,
+                        msg_type=0,
+                        msg_id=message.id,
+                        msg_seq=i,
+                        content=f"该段落无法流式输出",
+                    )
+            result = reply
         else:
             data = False
             for k, r in keyanswer.items():

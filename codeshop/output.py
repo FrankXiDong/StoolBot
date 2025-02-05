@@ -1,7 +1,10 @@
 from time import sleep
+from openai import OpenAI, APIError, APIConnectionError
+from urllib.parse import urlencode
+from urllib.request import urlopen
 import json, random
 from codeshop.areacode import mareacode, mareaname
-from codeshop.DeepSeek import chatlearning, chatsimple, chatgame, game_answer, before
+import codeshop.AIchat as AI
 
 
 def arcode(areanum):
@@ -41,6 +44,78 @@ def tryagain(text):  # 给消息加密，躲避屏蔽词
     return result
 
 
+def chatsimple(api_key, model_name, user_message, system_message, temp_message, base_url):
+    '''普通模式的对话'''
+    temp_message = eval(temp_message)
+    ins = (
+        [{"role": "system", "content": system_message}]
+        + temp_message
+        + [{"role": "user", "content": user_message}]
+    )
+    return AI.aichat(ins, api_key, model_name, base_url)
+
+def chatlearning(api_key, model_name, user_message, system_message, temp_message, base_url):
+    '''维权模式的对话'''
+    # ins=[{"role": "system", "content": system_message}]
+    temp_message = eval(temp_message)
+    with open("./prompt/model_data1.txt", "r", encoding="utf-8") as f:
+        model2 = f.read()
+    model2 = [
+        {
+            "role": "user",
+            "content": "请认真阅读以下内容，并在之后的回答中可以使用这些内容：" + model2,
+        },
+        {"role": "assistant", "content": "好的"},
+    ]
+    with open("./prompt/model_data2.txt", "r", encoding="utf-8") as f:
+        model3 = f.read()
+    model3 = [
+        {
+            "role": "user",
+            "content": "请认真阅读以下内容，并在之后的回答中可以使用这些内容：" + model3,
+        },
+        {"role": "assistant", "content": "好的"},
+    ]
+    ins = (
+        [{"role": "system", "content": system_message}]
+        + model2
+        + model3
+        + temp_message
+        + [{"role": "user", "content": user_message}]
+    )
+    return AI.aichat(ins, api_key, model_name, base_url)
+
+
+def chatgame(api_key, model_name, user_message, system_message, base_url):
+    '''游戏模式的对话'''
+    client = OpenAI(api_key=api_key, base_url=base_url)
+    ins = [{"role": "system", "content": system_message},{"role": "user", "content": user_message}]
+    return AI.aichat(ins, api_key, model_name, base_url)
+    
+def game_answer(api_key, model_name, user_message, system_message, temp_message, base_url):
+    '''模拟教育部门回复游戏'''
+    client = OpenAI(api_key=api_key, base_url=base_url)
+    temp_message = []
+    ins = (
+        [{"role": "system", "content": system_message}]
+        #+ temp_message
+        + [{"role": "user", "content": user_message}]
+    )
+    return AI.aichat(ins, api_key, model_name, base_url)
+    
+def before(text):
+    with open("../config.json", "r", encoding="utf-8") as fp:
+        json_data = json.load(fp)
+        api_key = json_data["ai"]["before"]["key"]
+        base_url = json_data["ai"]["before"]["base_url"]
+        model_name = json_data["ai"]["before"]["model"]
+        
+    client = OpenAI(api_key=api_key, base_url=base_url)
+    temp_message = []
+    ins = [{"role": "user", "content": text}]
+    return AI.aichat(ins, api_key, model_name, base_url)
+
+
 def chat_body(content, key, model, base_url): 
     model_name = model
     model_chat = " no prompt "
@@ -49,7 +124,7 @@ def chat_body(content, key, model, base_url):
     print(check)
     # 分情况请求不同的API
     if "/游戏" in content:
-        return "测试版机器人的游戏功能暂时无法使用，敬请谅解！"
+        return "开发中（测试版）机器人的游戏功能暂时无法使用，敬请谅解！"
         with open("./prompt/newgame_level.txt", "r", encoding="utf-8") as f:
             prompt = f.read()
         try:
@@ -64,8 +139,7 @@ def chat_body(content, key, model, base_url):
         weights = [5, 30, 50, 15]
         # 根据权重随机选择一个结果
         result = random.choices(options, weights=weights, k=1)[0]
-        
-        result = 'd'
+        # result = 'd'
         if result == 'a':
             with open("./prompt/newgame_a.txt", "r", encoding="utf-8") as f:
                 prompt = f.read()
@@ -124,9 +198,7 @@ def chat_body(content, key, model, base_url):
         game = False
     print(response)
     if response == "":
-        return "机器人异常"
-    if "机器人程序codeshop.DeepSeek出错" in response:
-        return "机器人异常"
+        return "【异常】机器人出现异常错误，程序返回了一个空值，请联系开发者处理。"
     answer = after(response)
     temp_message = eval(temp_message_chat)
     if temp_message.__len__() > 10:# 限制消息记录数量
@@ -142,7 +214,7 @@ def chat_body(content, key, model, base_url):
         text = "\n" + answer + "\n\nPS：以上内容为AI自动生成，仅供娱乐，无实际意义; 本游戏不支持存储上下文数据"
     else:
         temp_message_game = []# 临时
-        temp_message_game.append({"rol e": "user", "content": content})
+        temp_message_game.append({"role": "user", "content": content})
         temp_message_game.append({"role": "assistant", "content": ans})
         with open("./data/temp_message_game.json", "w", encoding="utf-8") as file:
             json.dump(temp_message_game, file, ensure_ascii=False, indent=4)
@@ -171,5 +243,5 @@ def after(text):
     answer = answer.replace("中央军委主席","Chairman of the Central Military Commission")
     answer = answer.replace("中央军事委员会主席","Chairman of the Central Military Commission")
     answer = answer.replace("中央委员会","Central Committee")
-    answer = answer.replace("市委书记","CPC市丿委员会，书丿记")
+    answer = answer.replace("市委书记","市Wei书Ji")
     return answer
