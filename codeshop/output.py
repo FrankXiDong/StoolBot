@@ -142,7 +142,7 @@ def chat_body(content, key, model, base_url):
         text = "\n" + answer + "\n\nPS：以上内容为AI自动生成，仅供娱乐，无实际意义; 本游戏不支持存储上下文数据"
     else:
         temp_message_game = []# 临时
-        temp_message_game.append({"role": "user", "content": content})
+        temp_message_game.append({"rol e": "user", "content": content})
         temp_message_game.append({"role": "assistant", "content": ans})
         with open("./data/temp_message_game.json", "w", encoding="utf-8") as file:
             json.dump(temp_message_game, file, ensure_ascii=False, indent=4)
