@@ -11,8 +11,7 @@ from time import sleep
 from codeshop.locknum import locknum
 from codeshop.game import joingame, startgame
 from codeshop.balance import balance
-from codeshop.output import arcode, arname, tryagain, chat_body
-from codeshop.AIchat import chatsimple, chatlearning
+from codeshop.output import arcode, arname, tryagain, chat_body, chatsimple, chatlearning
 from botpy.audio import Audio
 import asyncio
 
