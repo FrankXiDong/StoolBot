@@ -3,15 +3,7 @@ from urllib.parse import urlencode
 from urllib.request import urlopen
 import json, requests
 
-
-def chatsimple(api_key, model_name, user_message, system_message, temp_message, base_url):
-    '''普通模式的对话'''
-    temp_message = eval(temp_message)
-    ins = (
-        [{"role": "system", "content": system_message}]
-        + temp_message
-        + [{"role": "user", "content": user_message}]
-    )
+def aichat(ins, api_key, model_name, base_url):
     payload = {
         "model": model_name,
         "messages": ins,
@@ -23,8 +15,10 @@ def chatsimple(api_key, model_name, user_message, system_message, temp_message, 
     }
     try:
         response = requests.request("POST", base_url, json=payload, headers=headers)
+        #if response.text["error_msg"]:
+        #     return response.text["error_msg"]
         ans = json.loads(response.text)
-        # print(response.text)
+        #print(response.text)
         # return str(response.text)
         try:
             think = ans["choices"][0]["message"]["reasoning_content"]
@@ -37,17 +31,24 @@ def chatsimple(api_key, model_name, user_message, system_message, temp_message, 
             file.write(ans["choices"][0]["message"]["content"])
         return ans["choices"][0]["message"]["content"]
     except json.JSONDecodeError as e:
-        print(f"JSON解析失败，原始响应内容: {response.text}")
-        return "服务响应异常，请稍后再试"
+        return f"【异常】JSON解析失败，原始响应内容: {response.text}"
     except APIError as e:
-        print(f"API错误: {e.status_code} {e.message}")
-        return "服务暂时不可用，请稍后再试"
+        return f"【异常】API错误: {e.status_code} {e.message}"
     except APIConnectionError as e:
-        print(f"连接错误: {e}")
-        return "网络连接异常，请检查网络设置"
+        return f"【异常】连接错误: {e}"
     except Exception as e:
-        print(f"未知错误: {str(e)}")
-        return "服务出现意外错误"
+        return f"【异常】未知错误: {str(e)}"
+
+
+def chatsimple(api_key, model_name, user_message, system_message, temp_message, base_url):
+    '''普通模式的对话'''
+    temp_message = eval(temp_message)
+    ins = (
+        [{"role": "system", "content": system_message}]
+        + temp_message
+        + [{"role": "user", "content": user_message}]
+    )
+    aichat(ins, api_key, model_name, base_url)
 
 def chatlearning(api_key, model_name, user_message, system_message, temp_message, base_url):
     '''维权模式的对话'''

@@ -123,8 +123,10 @@ def chat_body(content, key, model, base_url):
         response = ans
         game = False
     print(response)
+    if response == "":
+        return "机器人异常"
     if "机器人程序codeshop.DeepSeek出错" in response:
-        return 0
+        return "机器人异常"
     answer = after(response)
     temp_message = eval(temp_message_chat)
     if temp_message.__len__() > 10:# 限制消息记录数量
