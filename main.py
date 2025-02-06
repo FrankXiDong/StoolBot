@@ -1,4 +1,4 @@
-import os, json, botpy, time, random, requests, ast, urllib, datetime, asyncio
+import os, json, botpy, time, random, requests, ast, urllib, datetime, asyncio, threading
 from botpy import logging, logger, message, BotAPI
 from botpy.message import DirectMessage, Message, GroupMessage
 from botpy.ext.cog_yaml import read
@@ -95,13 +95,11 @@ class Output():
 
     def chatgame(api_key, model_name, user_message, system_message, base_url):
         '''游戏模式的对话'''
-        client = OpenAI(api_key=api_key, base_url=base_url)
         ins = [{"role": "system", "content": system_message},{"role": "user", "content": user_message}]
         return AI.aichat(ins, api_key, model_name, base_url)
         
     def game_answer(api_key, model_name, user_message, system_message, temp_message, base_url):
         '''模拟教育部门回复游戏'''
-        client = OpenAI(api_key=api_key, base_url=base_url)
         temp_message = []
         ins = (
             [{"role": "system", "content": system_message}]
@@ -109,6 +107,44 @@ class Output():
             + [{"role": "user", "content": user_message}]
         )
         return AI.aichat(ins, api_key, model_name, base_url)
+    
+    def stream(api_key, model_name, user_message, system_message, temp_message, base_url):
+        '''流式对话
+
+        参数：
+        api_key: str
+        model_name: str
+        user_message: str
+        system_message: str
+        temp_message: str
+        base_url: str
+        '''
+        if base_url == "https://api.siliconflow.com/v1/chat/completions":
+            base_url = "https://api.siliconflow.com/v1"
+        if base_url == "https://api.deepseek.com/chat/completions":
+            base_url = "https://api.deepseek.com/v1"
+        cilent = OpenAI(api_key=api_key, base_url=base_url)
+        temp_message = eval(temp_message)
+        ins = ([{"role": "system", "content": system_message}]
+            + temp_message
+            + [{"role": "user", "content": user_message}])
+        response = cilent.chat.completions.create(
+            model=model_name,
+            messages=ins,
+            stream=True,
+        )
+        collected_content = ""
+        splitter = AI.ResponseSplitter()
+        for chunk in response:
+            if chunk.choices:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    for content in splitter.process(delta.content):
+                        yield content
+        # 处理最终残留内容
+        final_content = splitter.flush()
+        if final_content:
+            yield final_content
         
     def before(text):
         """先行判断AI"""
@@ -368,7 +404,7 @@ class MyClient(botpy.Client):
         await self.api.on_microphone(audio.channel_id)
 
     async def on_group_at_message_create(self, message: GroupMessage):  # 收到群消息时
-        print(message)
+        logger.info(message)
         global json_data
         dataid = eval(str(message.author))
         open_id = dataid["member_openid"]  # 获取open_id
@@ -414,8 +450,7 @@ class MyClient(botpy.Client):
             """
             测试流式输出
             """
-            content = message.content.replace("test", "")
-            reply = ""
+            content = message.content.replace("test000", "")
             chose = json_data['ai_chose']
             key = json_data["ai"][chose]["key"]
             model_name = json_data["ai"][chose]["model"]
@@ -427,28 +462,36 @@ class MyClient(botpy.Client):
                     temp_message_chat = f.read()
             except:
                 model_chat = "no prompt"
-                temp_message_chat = []
-            i = 1
-            for chunk in Output.chatsimple(key, model_name, content, model_chat, temp_message_chat, base_url):
-                try:
-                    await message._api.post_group_message(
-                        group_openid=message.group_openid,
-                        msg_type=0,
-                        msg_id=message.id,
-                        msg_seq=i,
-                        content=chunk,
-                    )
-                    reply+=chunk
-                    i+=1
-                except:
-                    await message._api.post_group_message(
-                        group_openid=message.group_openid,
-                        msg_type=0,
-                        msg_id=message.id,
-                        msg_seq=i,
-                        content=f"该段落无法流式输出",
-                    )
-            result = reply
+                temp_message_chat = "[]"
+            i = 2
+            reply = ""
+            with query_lock:
+                for chunk in Output.stream(api_key=key, model_name=model_name, base_url=base_url,temp_message=temp_message_chat, system_message=model_chat,user_message=content):
+                    # 输出流式数据
+                    if chunk == "":
+                        continue
+                    try:
+                        await message._api.post_group_message(
+                            group_openid=message.group_openid,
+                            msg_type=0,
+                            msg_id=message.id,
+                            msg_seq=i,
+                            content=chunk,
+                        )
+                        logger.info(chunk)
+                        reply+=chunk
+                        i+=1
+                    except:
+                        await message._api.post_group_message(
+                            group_openid=message.group_openid,
+                            msg_type=0,
+                            msg_id=message.id,
+                            msg_seq=i,
+                            content=f"该段落无法流式输出",
+                        )
+                        reply+=chunk
+                        i+=1
+            return
         else:
             data = False
             for k, r in keyanswer.items():
@@ -510,7 +553,9 @@ if __name__ == "__main__":
     intents.public_messages = True
     with open("../config.json", "r", encoding="utf-8") as file:
         json_data = json.load(file)
-        appid = json_data["bot"]["appid"]
-        secret = json_data["bot"]["secret"]
+        bot_chose = json_data["bot_chose"]
+        appid = json_data[bot_chose]["appid"]
+        secret = json_data[bot_chose]["secret"]
+    query_lock = threading.Lock() # 创建一个锁
     client = MyClient(intents=intents, timeout=8)
     client.run(appid=appid, secret=secret)
