@@ -25,15 +25,14 @@ version = ""
 
 
 class MyClient(botpy.Client):
-
-    async def on_ready(self):  # 初次启动时
+    async def on_ready(self): 
+        """
+        初次启动时触发
+        """
         global version
         with open("./data/version.txt", "r", encoding="utf-8") as file:
-            version=file.read()
-        start_txt = "\
------------启动成功------------\n\
-    小板凳频道管家，启动！\n\
-    版本:"+version
+            version = file.read()
+        start_txt = "-----------启动成功------------\n  小板凳频道管家，启动！\n    版本:" + version
         print(start_txt)
         try:
             await self.api.post_group_message(
@@ -42,33 +41,8 @@ class MyClient(botpy.Client):
                     content="机器人已启动",
                 )
         except:
-            logger.info("机器人已启动，主动消息发送失败")
-            pass
-        #asyncio.create_task(self.send_periodic_message())
-
-    async def send_periodic_message(self):
-        target_time = datetime.time(hour=19, minute=55)
-        
-        while True:
-            now = datetime.datetime.now()
-            target_datetime = datetime.datetime.combine(now.date(), target_time)
-            
-            if now > target_datetime:
-                # 如果当前时间已经过了目标时间，则设置为第二天的目标时间
-                target_datetime += datetime.timedelta(days=1)
-            
-            # 计算等待时间
-            wait_seconds = (target_datetime - now).total_seconds()
-            await asyncio.sleep(wait_seconds)
-            
-            # 发送消息
-            await self.api.post_group_message(
-                group_openid="7C54D45EDDE030719971497006C0CA03",
-                msg_type=0,
-                content="这是一条定时发送的消息",
-            )
-
-    
+            logger.info("机器人已成功启动；主动消息发送失败")
+            pass    
 
     async def on_c2c_message_create(self, message: Message):  # 收到私聊信息时
         openid = message.author.user_openid
@@ -309,9 +283,8 @@ if __name__ == "__main__":
     intents.guild_message_reactions = True
     intents.forums = True
     intents.public_messages = True
-    # intents = botpy.Intents(public_guild_messages=True, direct_message=True, guilds=True)
-    with open("../config.json", "r", encoding="utf-8") as fp:
-        json_data = json.load(fp)
+    with open("../config.json", "r", encoding="utf-8") as file:
+        json_data = json.load(file)
         appid = json_data["bot"]["appid"]
         secret = json_data["bot"]["secret"]
     client = MyClient(intents=intents, timeout=8)
