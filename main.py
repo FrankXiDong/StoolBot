@@ -1,4 +1,4 @@
-import os, json, botpy, time, random, requests, ast, urllib, datetime
+import os, json, botpy, time, random, requests, ast, urllib, datetime, asyncio
 from botpy import logging, logger, message, BotAPI
 from botpy.message import DirectMessage, Message, GroupMessage
 from botpy.ext.cog_yaml import read
@@ -12,7 +12,6 @@ from codeshop.locknum import locknum
 from codeshop.game import joingame, startgame
 from codeshop.balance import balance
 from botpy.audio import Audio
-import asyncio
 from openai import OpenAI, APIError, APIConnectionError
 from urllib.parse import urlencode
 from urllib.request import urlopen
@@ -291,7 +290,7 @@ class MyClient(botpy.Client):
                 msg_id=message.id,
                 content=f"我收到了你的提示词：{word}。",
             )
-            logger.info(
+            logger.warning(
                 f"新增了一个提示词。\n发送指令的ID：{openid}\n提示词内容：{word}"
             )
             return
@@ -361,9 +360,7 @@ class MyClient(botpy.Client):
                         content=f"请尝试发送“读取”获取加密版回答",
                     )
 
-            logger.info(
-                f"修改了g_a_a提示词。\n发送指令的ID：{openid}\n提示词内容：{text}"
-            )
+            logger.warning(f"修改了g_a_a提示词。\n发送指令的ID：{openid}\n提示词内容：{text}")
         else:
             return
 
@@ -488,7 +485,7 @@ class MyClient(botpy.Client):
                 msg_id=message.id,
                 content=f"已经尝试多次发送均失败，可以尝试发送“读取”再次重试。",
             )
-            logger.info(f"消息发送失败多次：\n{result}")
+            logger.warning(f"消息发送失败多次：\n{result}")
         else:
             await message._api.post_group_message(
                 group_openid=message.group_openid,
@@ -496,7 +493,7 @@ class MyClient(botpy.Client):
                 msg_id=message.id,
                 content=f"【异常】机器人的程序貌似出错了，返回了一个空值，请联系开发者处理！",
             )
-            logger.error("main.py报错，result返回空值")
+            logger.error("【异常】main.py报错，result返回空值")
         return result
 
 
