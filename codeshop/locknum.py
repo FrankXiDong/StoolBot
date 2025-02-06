@@ -1,12 +1,10 @@
 import os
 
-
 def check(value, my_dict):
     for key in my_dict:
         if value == key:
             return True
     return False
-
 
 def locknum(content, openid):
     user = content.split("/绑定 ")[1]  # 截取用户名
