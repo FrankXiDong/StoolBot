@@ -487,15 +487,34 @@ class MyClient(botpy.Client):
                             msg_type=0,
                             msg_id=message.id,
                             msg_seq=i,
-                            content=f"该段落无法流式输出",
+                            content=f"该段落可能无法流式输出",
                         )
                         reply+=chunk
                         i+=1
+                        again = True
+                await message._api.post_group_message(
+                        group_openid=message.group_openid,
+                        msg_type=0,
+                        msg_id=message.id,
+                        msg_seq=i,
+                        content="全部输出完毕，如果有内容输出失败，请尝试发送”读取指令重试",
+                    )
+            if again == True:
+                with open("./data/tryagain.txt", "w", encoding="utf-8") as f:
+                    f.write(reply)
+            with open("./data/temp_message.txt", "w", encoding="utf-8") as f:
+                temp_message = eval(temp_message_chat)
+            if temp_message.__len__() > 10:# 限制消息记录数量
+                temp_message = temp_message[-10:] # 保留最近5条消息
+            temp_message.append({"role": "user", "content": content})
+            temp_message.append({"role": "assistant", "content": ans})
+            with open("./data/temp_message.txt", "w", encoding="utf-8") as file:
+                file.write(str(temp_message))
             return
         else:
             data = False
             for k, r in keyanswer.items():
-                if k in message.content:  # 如果在固定问答内容中，使用固定问答文本
+                if k in message.content :  # 如果在固定问答内容中，使用固定问答文本
                     result = r
                     data = True
             if data == False:
