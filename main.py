@@ -119,64 +119,42 @@ class Output():
         temp_message: str
         base_url: str
         '''
-        '''
         if base_url == "https://api.siliconflow.com/v1/chat/completions":
             base_url = "https://api.siliconflow.com/v1"
         if base_url == "https://api.deepseek.com/chat/completions":
             base_url = "https://api.deepseek.com/v1"
-        '''
-        # cilent = OpenAI(api_key=api_key, base_url=base_url)
+        cilent = OpenAI(api_key=api_key, base_url=base_url)
         temp_message = eval(temp_message)
         ins = ([{"role": "system", "content": system_message}]
             + temp_message
             + [{"role": "user", "content": user_message}])
-        payload = {
-                "model": model_name,
-                "messages": ins,
-                "stream": True
-        }
-        headers = {
-                "accept": "application/json",
-                "content-type": "application/json",
-                "authorization": f"Bearer {api_key}"
-            }
-        response = requests.post(url=base_url, json=payload, headers=headers, stream=True)
+        response = cilent.chat.completions.create(
+            model=model_name,
+            messages=ins,
+            stream=True,
+        )
         collected_content = ""
-        reasoning_content = ""
-        content = ""   
         splitter = AI.ResponseSplitter()
-        if response.status_code == 200: 
-            for chunk in response.iter_content(chunk_size=8192): 
-                if chunk:
-                    decoded_chunk = chunk.decode('utf-8')
-                    try:
-                        print(decoded_chunk["choices"][0]["delta"])
-                    except:pass
-                    print(decoded_chunk, end='')
-        else:
-            print('Request failed with status code:', response.status_code)
-        '''
-        for chunk in response.iter_content(chunk_size=8192):# 循环遍历response的迭代器
-            if chunk["choices"][0]["content"]: # 如果delta.content不为空，则将内容添加到collected_content中 
-                for content in splitter.process(chunk.choices[0].delta.content): # 处理每个content
-                    yield content
-            elif chunk.choices[0].delta.reasoning_content: # 如果delta.reasoning_content不为空，则将内容添加到collected_content中
-                for reasoning_content in splitter.process(chunk.choices[0].delta.reasoning_content):
-                    yield "【思考中】" + reasoning_content
+        for chunk in response:
+            if chunk.choices:
+                delta = chunk.choices[0].delta
+                if delta.content:
+                    for content in splitter.process(delta.content):
+                        yield content
         # 处理最终残留内容
         final_content = splitter.flush()
         if final_content:
             yield final_content
-        '''
         
     def before(text):
         """先行判断AI"""
         with open("../config.json", "r", encoding="utf-8") as fp:
             json_data = json.load(fp)
-            chose = json_data["before_chose"]
-            api_key = json_data["ai"][chose]["key"]
-            base_url = json_data["ai"][chose]["base_url"]
-            model_name = json_data["ai"][chose]["model"]
+            api_key = json_data["ai"]["before"]["key"]
+            base_url = json_data["ai"]["before"]["base_url"]
+            model_name = json_data["ai"]["before"]["model"]
+        client = OpenAI(api_key=api_key, base_url=base_url)
+        temp_message = []
         ins = [{"role": "user", "content": text}]
         return AI.aichat(ins, api_key, model_name, base_url)
 
