@@ -1,25 +1,32 @@
 import os, json, botpy, time, random, requests, ast, urllib, datetime, asyncio, threading
 from botpy import logging, logger, message, BotAPI
 from botpy.message import DirectMessage, Message, GroupMessage
+from botpy.audio import Audio
+from botpy.user import Member
 from botpy.ext.cog_yaml import read
 from botpy.types.message import Reference
 from botpy.types.announce import AnnouncesType
 from botpy.forum import Thread
 from botpy.types.forum import Post, Reply, AuditResult
 from botpy.types.channel import ChannelSubType, ChannelType
+from botpy.logging import DEFAULT_FILE_HANDLER
 from time import sleep
 from codeshop.locknum import locknum
 from codeshop.game import joingame, startgame
 from codeshop.balance import balance
-from botpy.audio import Audio
 from openai import OpenAI, APIError, APIConnectionError
 from urllib.parse import urlencode
 from urllib.request import urlopen
 from codeshop.areacode import mareacode, mareaname
 import codeshop.AIchat as AI
 
+# 修改默认日志
+DEFAULT_FILE_HANDLER["filename"] = os.path.join(os.getcwd(), "log", "%(name)s.log")
+DEFAULT_FILE_HANDLER["level"] = "DEBUG"
+
 logging.configure_logging()
 _log = logging.get_logger()
+
 keyanswer = {
     "test": "你在测试什么？",
 }
@@ -138,8 +145,13 @@ class Output():
         for chunk in response:
             if chunk.choices:
                 delta = chunk.choices[0].delta
-                if delta.content:
+                if delta.model_extra['reasoning_content']:
+                    for reasoner_content in splitter.process(delta.model_extra['reasoning_content']):
+                        # logger.info(reasoner_content)
+                        yield "【思考中】：" + reasoner_content
+                elif delta.content:
                     for content in splitter.process(delta.content):
+                        # logger.info(content)
                         yield content
         # 处理最终残留内容
         final_content = splitter.flush()
@@ -455,7 +467,13 @@ class MyClient(botpy.Client):
             """
             测试流式输出
             """
-            await message.reply("您正在使用流式输出，请稍候。\nPS：目前AI问答功能，尤其是流式输出，还处于测试阶段，有很多未知的bug；如果机器人报错或几分钟都不回复，请向开发者反馈（可以在Github上提issue）；一个问题未回答完时，请勿发送第二个问题，否则机器人可能卡死报错。")
+            await message._api.post_group_message(
+                group_openid=message.group_openid,
+                msg_type=0,
+                msg_id=message.id,
+                msg_seq=0,
+                content="【流式输出模式：温馨提示】您正在使用流式输出，请稍候。\nPS：目前AI问答功能，尤其是流式输出，还处于测试阶段，有很多未知的bug；如果机器人报错或几分钟都不回复，请向开发者反馈（可以在Github上提issue）；一个问题未回答完时，请勿发送第二个问题，否则机器人可能卡死报错。"
+                )
             content = message.content.replace("/流式输出", "")
             chose = json_data['ai_chose']
             key = json_data["ai"][chose]["key"]
@@ -471,41 +489,32 @@ class MyClient(botpy.Client):
                 temp_message_chat = "[]"
             i = 2
             reply = ""
+            again = False
             with query_lock:
+                logger.debug('开始流式输出')
                 for chunk in Output.stream(api_key=key, model_name=model_name, base_url=base_url,temp_message=temp_message_chat, system_message=model_chat,user_message=content):
                     # 输出流式数据
+                    logger.debug('这是一次流式输出')
                     if chunk == "":
                         continue
                     try:
-                        await message._api.post_group_message(
-                            group_openid=message.group_openid,
-                            msg_type=0,
-                            msg_id=message.id,
-                            msg_seq=i,
-                            content=chunk,
-                        )
+                        await message._api.post_group_message(group_openid=message.group_openid,msg_id=message.id,msg_seq=i,content=chunk)
                         logger.info(chunk)
                         reply+=chunk
                         i+=1
-                        again = False
                     except:
-                        await message._api.post_group_message(
-                            group_openid=message.group_openid,
-                            msg_type=0,
-                            msg_id=message.id,
-                            msg_seq=i,
-                            content=f"该段落可能无法流式输出",
-                        )
+                        await message._api.post_group_message(group_openid=message.group_openid,msg_id=message.id,msg_seq=i,content=f"该段落可能无法流式输出")
                         reply+=chunk
                         i+=1
                         again = True
+                logger.debug("流式输出：完毕1")
                 await message._api.post_group_message(
                         group_openid=message.group_openid,
-                        msg_type=0,
                         msg_id=message.id,
                         msg_seq=i,
-                        content="全部输出完毕，如果有内容输出失败，请尝试发送”读取指令重试",
+                        content="【流式输出模式：结束提示】全部输出完毕，如果有内容输出失败，请尝试发送“读取”指令重试；如果一条消息都没有就结束了，可能是请求超时，请稍后重试！",
                     )
+                logger.debug("流式输出：完毕2")
             if again == True:
                 with open("./data/tryagain.txt", "w", encoding="utf-8") as f:
                     f.write(reply)
@@ -590,5 +599,5 @@ if __name__ == "__main__":
         appid = json_data[bot_chose]["appid"]
         secret = json_data[bot_chose]["secret"]
     query_lock = threading.Lock() # 创建一个锁
-    client = MyClient(intents=intents, timeout=8)
+    client = MyClient(intents=intents, timeout=8, ext_handlers=DEFAULT_FILE_HANDLER)
     client.run(appid=appid, secret=secret)
