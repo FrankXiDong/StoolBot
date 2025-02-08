@@ -412,6 +412,8 @@ class MyClient(botpy.Client):
         if "/绑定 " in message.content:  # 绑定用户名和open_id
             result = locknum(message.content, open_id)
             return
+        elif "test" in message.content:
+            result = "你在测试什么？" 
         elif "加入真心话" in message.content or "参加真心话" in message.content:  # 加入游戏
             result = joingame(message.author)
         elif "输出思考" in message.content:
@@ -423,7 +425,7 @@ class MyClient(botpy.Client):
             chose = json_data["ai_chose"]
             key = json_data["ai"][chose]["key"]
             url = json_data["ai"][chose]["base_url"]
-            if url != "https://api.deepseek.com/v1":
+            if "https://api.deepseek.com" not in url:
                 result = "现在使用的API不支持查询余额！"
             else:
                 data = balance(key=key)
@@ -446,11 +448,12 @@ class MyClient(botpy.Client):
         elif "功能" in message.content:
             with open("./data/aboutme.txt", "r", encoding="utf-8") as file:
                 result = file.read()
-        elif "test000" in message.content:
+        elif "/流式输出" in message.content:
             """
             测试流式输出
             """
-            content = message.content.replace("test000", "")
+            await message.reply("您正在使用流式输出，请稍候。\nPS：目前AI问答功能，尤其是流式输出，还处于测试阶段，有很多未知的bug；如果机器人报错或几分钟都不回复，请向开发者反馈（可以在Github上提issue）；一个问题未回答完时，请勿发送第二个问题，否则机器人可能卡死报错。")
+            content = message.content.replace("/流式输出", "")
             chose = json_data['ai_chose']
             key = json_data["ai"][chose]["key"]
             model_name = json_data["ai"][chose]["model"]
@@ -481,6 +484,7 @@ class MyClient(botpy.Client):
                         logger.info(chunk)
                         reply+=chunk
                         i+=1
+                        again = False
                     except:
                         await message._api.post_group_message(
                             group_openid=message.group_openid,
@@ -507,7 +511,7 @@ class MyClient(botpy.Client):
             if temp_message.__len__() > 10:# 限制消息记录数量
                 temp_message = temp_message[-10:] # 保留最近5条消息
             temp_message.append({"role": "user", "content": content})
-            temp_message.append({"role": "assistant", "content": ans})
+            temp_message.append({"role": "assistant", "content": reply})
             with open("./data/temp_message.txt", "w", encoding="utf-8") as file:
                 file.write(str(temp_message))
             return
@@ -518,12 +522,19 @@ class MyClient(botpy.Client):
                     result = r
                     data = True
             if data == False:
+                await message._api.post_group_message(
+                    group_openid=message.group_openid,
+                    msg_type=0,
+                    msg_id=message.id,
+                    msg_seq=0,
+                    content="您没有使用任何指令，正在尝试AI回复，请稍候。\nPS：目前AI问答功能处于测试阶段，有很多未知的bug，如果机器人超过3分钟没有响应，请尝试发送“读取”指令获取；如果读取后没有回复内容，请向开发者反馈（可以在Github上提issue）；一个问题未回答完时，请勿发送第二个问题，否则机器人可能卡死报错。",
+                )
                 chose = json_data['ai_chose']
                 key = json_data["ai"][chose]["key"]
                 model = json_data["ai"][chose]["model"]
                 base_url = json_data["ai"][chose]["base_url"]
                 # 调用AI（Output.chatbody函数）处理消息。
-                result = Output.chat_body(message.content, key=key, model=model, base_url=base_url)
+                result = Output.chat_body(Output,content=message.content, key=key, model=model, base_url=base_url)
         if result != False:
             for i in range(2,5):
                 try:
