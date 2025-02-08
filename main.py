@@ -150,11 +150,10 @@ class Output():
         """先行判断AI"""
         with open("../config.json", "r", encoding="utf-8") as fp:
             json_data = json.load(fp)
-            api_key = json_data["ai"]["before"]["key"]
-            base_url = json_data["ai"]["before"]["base_url"]
-            model_name = json_data["ai"]["before"]["model"]
-        client = OpenAI(api_key=api_key, base_url=base_url)
-        temp_message = []
+            chose = json_data["before_chose"]
+            api_key = json_data["ai"][chose]["key"]
+            base_url = json_data["ai"][chose]["base_url"]
+            model_name = json_data["ai"][chose]["model"]
         ins = [{"role": "user", "content": text}]
         return AI.aichat(ins, api_key, model_name, base_url)
 
