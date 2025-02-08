@@ -402,6 +402,10 @@ class MyClient(botpy.Client):
     async def on_audio_start(self, audio: Audio):
         await self.api.on_microphone(audio.channel_id)
 
+    async def on_guild_member_add(self, member:Member):
+        await self.api.post_message(channel_id="651889168", content=f"<@{member.user.id}>欢迎新人!\n祝你在本频道玩的愉快！")
+
+
     async def on_group_at_message_create(self, message: GroupMessage):  # 收到群消息时
         logger.info(message)
         global json_data
