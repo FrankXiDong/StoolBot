@@ -13,9 +13,8 @@ class ResponseSplitter:
         初始化Test类的实例。
         """
         self.buffer = ''
-        self.max_length = 150
 
-    def process(self, new_content):
+    def process(self, new_content, max_length:int=300):
         """
         处理新的文本内容。
         
@@ -33,7 +32,7 @@ class ResponseSplitter:
             return
         # 处理单换行（仅在超过长度时）
         single_newline = self.buffer.rfind('\n')
-        if single_newline > self.max_length:
+        if single_newline > max_length:
             yield self.buffer[:single_newline]
             self.buffer = self.buffer[single_newline+1:]
             return

@@ -11,7 +11,7 @@ from botpy.types.forum import Post, Reply, AuditResult
 from botpy.types.channel import ChannelSubType, ChannelType
 from botpy.logging import DEFAULT_FILE_HANDLER
 from time import sleep
-from codeshop.locknum import locknum
+# from codeshop.locknum import locknum
 from codeshop.game import joingame, startgame
 from codeshop.balance import balance
 from openai import OpenAI, APIError, APIConnectionError
@@ -32,6 +32,34 @@ keyanswer = {
 }
 json_data = {}
 version = "v8.0.0-beta"
+
+class User():
+    '''
+    处理用户名和用户openid之间的联系。
+    '''
+    def check(value, my_dict):
+        for key in my_dict:
+            if value == key:
+                return True
+        return False
+
+    def locknum(self,content, openid):
+        user = content.split("/绑定 ")[1]  # 截取用户名
+        try:
+            with open("./data/userid.txt", "r", encoding="utf-8") as f:
+                userid = eval(f.read())
+        except:
+            userid = {}
+        if self.check(openid, userid) == False:  # 当检测到ID为未注册ID时，执行注册操作
+            userid[openid] = user
+            with open("./data/userid.txt", "w", encoding="utf-8") as f:
+                f.write(str(userid))
+            return "用户" + user + "已绑定成功！"
+        else:  # 当检测到ID为已注册ID时，执行改名操作
+            userid[openid] = user
+            with open("./data/userid.txt", "w", encoding="utf-8") as f:
+                f.write(str(userid))
+            return "用户" + user + "已修改用户名！"
 
 class Output():
     """
@@ -130,29 +158,26 @@ class Output():
             base_url = "https://api.siliconflow.com/v1"
         if base_url == "https://api.deepseek.com/chat/completions":
             base_url = "https://api.deepseek.com/v1"
+        base_url = base_url.replace("/chat/completions", "")
         cilent = OpenAI(api_key=api_key, base_url=base_url)
         temp_message = eval(temp_message)
         ins = ([{"role": "system", "content": system_message}]
             + temp_message
             + [{"role": "user", "content": user_message}])
-        response = cilent.chat.completions.create(
-            model=model_name,
-            messages=ins,
-            stream=True,
-        )
         collected_content = ""
         splitter = AI.ResponseSplitter()
-        for chunk in response:
-            if chunk.choices:
-                delta = chunk.choices[0].delta
-                if delta.model_extra['reasoning_content']:
-                    for reasoner_content in splitter.process(delta.model_extra['reasoning_content']):
-                        # logger.info(reasoner_content)
-                        yield "【思考中】：" + reasoner_content
-                elif delta.content:
-                    for content in splitter.process(delta.content):
-                        # logger.info(content)
-                        yield content
+        with cilent.chat.completions.create(model=model_name, messages=ins,stream=True) as response:
+            for chunk in response:
+                if chunk.choices:
+                    delta = chunk.choices[0].delta
+                    if delta.model_extra['reasoning_content']:
+                        for reasoner_content in splitter.process(new_content=delta.model_extra['reasoning_content'],max_length=350):
+                            # logger.info(reasoner_content)
+                            yield "【思考模式】"+str(reasoner_content)
+                    elif delta.content:
+                        for content in splitter.process(new_content=delta.content,max_length=100):
+                            # logger.info(content)
+                            yield content
         # 处理最终残留内容
         final_content = splitter.flush()
         if final_content:
@@ -425,7 +450,7 @@ class MyClient(botpy.Client):
         open_id = dataid["member_openid"]  # 获取open_id
         result = False
         if "/绑定 " in message.content:  # 绑定用户名和open_id
-            result = locknum(message.content, open_id)
+            result = User.locknum(message.content, open_id)
             return
         elif "test" in message.content:
             result = "你在测试什么？" 
@@ -503,7 +528,10 @@ class MyClient(botpy.Client):
                         reply+=chunk
                         i+=1
                     except:
-                        await message._api.post_group_message(group_openid=message.group_openid,msg_id=message.id,msg_seq=i,content=f"该段落可能无法流式输出")
+                        try:
+                            await message._api.post_group_message(group_openid=message.group_openid,msg_id=message.id,msg_seq=i,content=f"该段落可能无法流式输出")
+                        except:
+                            pass
                         reply+=chunk
                         i+=1
                         again = True
