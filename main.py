@@ -583,22 +583,21 @@ class MyClient(botpy.Client):
                         msg_type=0,
                         msg_id=message.id,
                         msg_seq=i,
-                        content=f"{result}",
+                        content=result,
                     )
-                    result = True
                     return
                 except:
                     result = Output.tryagain(result)
                 with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
                     file.write(result)
-                time.sleep(0.2)
+                time.sleep(0.4)
+            logger.warning(f"消息发送失败多次：\n{result}")
             await message._api.post_group_message(
                 group_openid=message.group_openid,
                 msg_type=0,
                 msg_id=message.id,
                 content=f"已经尝试多次发送均失败，可以尝试发送“读取”再次重试。",
             )
-            logger.warning(f"消息发送失败多次：\n{result}")
         else:
             await message._api.post_group_message(
                 group_openid=message.group_openid,
