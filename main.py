@@ -497,7 +497,7 @@ class MyClient(botpy.Client):
                 msg_type=0,
                 msg_id=message.id,
                 msg_seq=0,
-                content="【流式输出模式：温馨提示】您正在使用流式输出，请稍候。\nPS：目前AI问答功能，尤其是流式输出，还处于测试阶段，有很多未知的bug；如果机器人报错或几分钟都不回复，请向开发者反馈（可以在Github上提issue）；一个问题未回答完时，请勿发送第二个问题，否则机器人可能卡死报错。"
+                content="【流式输出模式：温馨提示】您正在使用流式输出，请稍候。\nPS：目前流式输出还处于测试阶段，有很多未知的bug；如果机器人报错，请向开发者反馈（可以在Github上提issue）；一个问题未回答完时，请勿发送第二个问题，否则机器人可能卡死报错；如果没有收到【流式输出模式：结束提示】的消息，可能是回复超过5min，请稍等片刻尝试“读取”指令，该问题日后会修复。"
                 )
             content = message.content.replace("/流式输出", "")
             chose = json_data['ai_chose']
