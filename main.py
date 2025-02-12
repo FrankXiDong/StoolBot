@@ -451,7 +451,8 @@ class MyClient(botpy.Client):
         result = False
         if "/绑定 " in message.content:  # 绑定用户名和open_id
             result = User.locknum(message.content, open_id)
-            return
+        elif "/游戏" in message.content:
+            result = "暂未开发游戏功能，请使用正式版机器人。"
         elif "test" in message.content:
             result = "你在测试什么？" 
         elif "加入真心话" in message.content or "参加真心话" in message.content:  # 加入游戏
