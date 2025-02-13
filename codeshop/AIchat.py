@@ -49,6 +49,52 @@ class ResponseSplitter:
         return content if content else None
     
 
+def image(text, img):
+    model_name = "Qwen/Qwen2-VL-72B-Instruct"
+    base_url = "https://api.siliconflow.com/v1/chat/completions"
+    api_key = "sk-croaumeyumtijxdbwwxbizeopqzjdyvrqzmnfdfhfjrjycfi"
+    ins = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "image_url":img,"text":text},
+        #{"role": "assistant", "content": "收到图片了，你有什么问题吗？"},
+        #{"role": "user", "text":text,"type":"text"}
+    ]
+    payload = {
+        "model": model_name,
+        "messages": ins,
+        "max_tokens": 2000,
+    }
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    try:
+        response = requests.request("POST", base_url, json=payload, headers=headers)
+        #if response.text["error_msg"]:
+        #     return response.text["error_msg"]
+        print(response.text)
+        ans = json.loads(response.text)
+        #print(response.text)
+        # return str(response.text)
+        try:
+            think = ans["choices"][0]["message"]["reasoning_content"]
+            with open("./data/think.txt", "w", encoding="utf-8") as file:
+                file.write(think)
+                print(think)
+        except:
+            pass
+        with open("./data/tryagain.txt", "w", encoding="utf-8") as file:
+            file.write(ans["choices"][0]["message"]["content"])
+        return ans["choices"][0]["message"]["content"]
+    except json.JSONDecodeError as e:
+        return f"【异常】JSON解析失败，原始响应内容: {response.text}"
+    except APIError as e:
+        return f"【异常】API错误: {e.status_code} {e.message}"
+    except APIConnectionError as e:
+        return f"【异常】连接错误: {e}"
+    except Exception as e:
+        return f"【异常】未知错误: {str(e)}"
+
 def aistream(ins, api_key, model_name, base_url):
     payload = {
         "model": model_name,

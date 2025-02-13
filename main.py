@@ -448,11 +448,24 @@ class MyClient(botpy.Client):
         global json_data
         dataid = eval(str(message.author))
         open_id = dataid["member_openid"]  # 获取open_id
+        # logger.info(message.attachments)
+        
+        img = eval(str(message.attachments))
         result = False
         if "/绑定 " in message.content:  # 绑定用户名和open_id
             result = User.locknum(message.content, open_id)
         elif "/游戏" in message.content:
             result = "暂未开发游戏功能，请使用正式版机器人。"
+        elif "image" in str(img):
+            text = message.content
+            img = img[0]["url"]
+            await message._api.post_group_message(
+                group_openid=message.group_openid,
+                msg_type=0,
+                msg_id=message.id,
+                msg_seq=0,
+                content="已收到，正在生成回复")
+            result = AI.image(text, img)
         elif "test" in message.content:
             result = "你在测试什么？" 
         elif "加入真心话" in message.content or "参加真心话" in message.content:  # 加入游戏
